@@ -2,8 +2,8 @@
     <!-- Base application theme. -->
     <style name="Theme.Deus" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
         <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/purple_500</item>
-        <item name="colorPrimaryVariant">@color/purple_700</item>
+        <item name="colorPrimary">@color/grey2</item>
+        <item name="colorPrimaryVariant">@color/grey1</item>
         <item name="colorOnPrimary">@color/white</item>
         <!-- Secondary brand color. -->
         <item name="colorSecondary">@color/teal_200</item>
@@ -12,5 +12,12 @@
         <!-- Status bar color. -->
         <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
         <!-- Customize your theme here. -->
+    </style>
+    
+    <style name="passCodeButton" parent="@style/Widget.AppCompat.Button.Borderless">
+        <item name="android:layout_width">72dp</item>
+        <item name="android:layout_height">72dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:textAppearance">@style/TextAppearance.AppCompat.Headline</item>
     </style>
 </resources>

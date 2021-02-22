@@ -7,7 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import com.amati.deus.R
-import com.amati.deus.databinding.FragmentLoginBinding
+import com.amati.deus.databinding.FragmentPinCodeLoginBinding
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -36,7 +36,7 @@ class LoginFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val binding = DataBindingUtil.inflate<FragmentLoginBinding>(inflater,R.layout.fragment_login,container,false)
+        val binding = DataBindingUtil.inflate<FragmentPinCodeLoginBinding>(inflater,R.layout.fragment_pin_code_login,container,false)
 
         return binding.root
     }

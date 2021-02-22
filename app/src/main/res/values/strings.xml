@@ -12,4 +12,14 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="login_text">Login</string>
+    <string name="delete">delete</string>
+    <string name="hello">Hello</string>
+    <string name="admin">Admin</string>
+    <string name="wake">Wake</string>
+    <string name="hours_placeholder">14</string>
+    <string name="minutes_placeholder">47</string>
+    <string name="seconds_placeholder">09</string>
+    <string name="hrs">Hrs</string>
+    <string name="mins">Mins</string>
+    <string name="secs">Secs</string>
 </resources>
