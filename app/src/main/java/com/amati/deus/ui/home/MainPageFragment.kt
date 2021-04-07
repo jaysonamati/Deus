@@ -1,16 +1,21 @@
 package com.amati.deus.ui.home
 
+import android.app.Notification
+import android.app.PendingIntent
+import android.content.Intent
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
-import androidx.lifecycle.Observer
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import com.amati.deus.MainActivity
 import com.amati.deus.R
 import com.amati.deus.databinding.FragmentMainPageBinding
+import com.amati.deus.services.*
 import timber.log.Timber
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 // TODO: Rename parameter arguments, choose names that match
@@ -39,18 +44,24 @@ class MainPageFragment : Fragment() {
         }
     }
 
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        binding = DataBindingUtil.inflate(inflater,R.layout.fragment_main_page,container,false)
+        binding = DataBindingUtil.inflate(inflater, R.layout.fragment_main_page, container, false)
         mainViewModel = ViewModelProvider(this).get(MainViewModel::class.java)
 
         binding.wakeButtonCardView.setOnClickListener {
             binding.wakeButtonCardView.visibility = View.GONE
             binding.timeElapsedCardView.visibility = View.VISIBLE
             wakeUp()
+        }
+
+        binding.timeElapsedCardView.setOnClickListener {
+            Timber.d("Stop the foreground service on demand".toUpperCase(Locale.ROOT))
+            actionOnService(ServiceActions.STOP)
         }
         return binding.root
     }
@@ -67,13 +78,13 @@ class MainPageFragment : Fragment() {
 
 //            Timber.e(elapsedTimeSeconds.toString())
 
-            if (elapsedTimeSeconds > 0 && elapsedTimeMinutes <= 0 && elapsedTimeHours <= 0){
+            if (elapsedTimeSeconds > 0 && elapsedTimeMinutes <= 0 && elapsedTimeHours <= 0) {
                 binding.secondsElapsedTextView.visibility = View.VISIBLE
                 binding.secondsLabelTextView.visibility = View.VISIBLE
-            }else if (elapsedTimeMinutes > 0 && elapsedTimeHours <= 0){
+            } else if (elapsedTimeMinutes > 0 && elapsedTimeHours <= 0) {
                 binding.minutesElapsedTextView.visibility = View.VISIBLE
                 binding.minutesLabelTextView.visibility = View.VISIBLE
-            }else if (elapsedTimeHours > 0){
+            } else if (elapsedTimeHours > 0) {
                 binding.hoursElapsedTextView.visibility = View.VISIBLE
                 binding.hoursLabelTextView.visibility = View.VISIBLE
             }
@@ -84,8 +95,48 @@ class MainPageFragment : Fragment() {
         })
     }
 
+
     private fun wakeUp() {
         mainViewModel.startTimerAndRecord()
+//        Intent(requireActivity(), ExampleService::class.java).also { intent ->
+//            activity?.startService(intent)
+//        }
+        Timber.d("Start the foreground service on demand".toUpperCase(Locale.ROOT))
+        actionOnService(ServiceActions.START)
+    }
+
+    private fun actionOnService(action: ServiceActions) {
+        if (getServiceState(requireContext()) == ServiceState.STOPPED && action == ServiceActions.STOP) return
+        Intent(requireContext(), WatchingService::class.java).also {
+            it.action = action.name
+            activity?.startForegroundService(it)
+            return
+        }
+    }
+
+
+    private fun forGroundServiceExample() {
+        val CHANNEL_DEFAULT_IMPORTANCE = "CHANNEL_DEFAULT_IMPORTANCE"
+
+        val pendingIntent: PendingIntent =
+            Intent(requireContext(), MainActivity::class.java).let { notificationIntent ->
+                PendingIntent.getActivity(requireContext(), 0, notificationIntent, 0)
+            }
+
+        val notification: Notification =
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                Notification.Builder(requireContext(), "CHANNEL_DEFAULT_IMPORTANCE")
+                    .setContentTitle("Example Service Notification")
+                    .setContentText("This shows that a foreground service has started")
+                    .setSmallIcon(R.drawable.ic_launcher_foreground)
+                    .setContentIntent(pendingIntent)
+                    .setTicker("This is the ticker text")
+                    .build()
+            } else {
+                Notification.Builder(requireContext())
+                    .build()
+            }
+
     }
 
     companion object {
