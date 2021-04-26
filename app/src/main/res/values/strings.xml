@@ -27,4 +27,5 @@
     <string name="hrs">Hrs</string>
     <string name="mins">Mins</string>
     <string name="secs">Secs</string>
+    <string name="generate_key_text">Generate Key</string>
 </resources>

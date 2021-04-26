@@ -9,5 +9,24 @@
         android:id="@+id/mainPageFragment"
         android:name="com.amati.deus.ui.home.MainPageFragment"
         android:label="MainPageFragment"
-        tools:layout="@layout/fragment_main_page"/>
+        tools:layout="@layout/fragment_main_page" />
+    <fragment
+        android:id="@+id/loginFragment"
+        android:name="com.amati.deus.ui.auth.LoginFragment"
+        android:label="LoginFragment" />
+    <action
+        android:id="@+id/action_global_loginFragment"
+        app:destination="@id/loginFragment" />
+    <fragment
+        android:id="@+id/setAdminCypherFragment"
+        android:name="com.amati.deus.ui.auth.SetAdminCypherFragment"
+        android:label="fragment_set_admin_cypher"
+        tools:layout="@layout/fragment_set_admin_cypher">
+        <action
+            android:id="@+id/action_setAdminCypherFragment_to_mainPageFragment"
+            app:destination="@id/mainPageFragment" />
+    </fragment>
+    <action
+        android:id="@+id/action_global_setAdminCypherFragment"
+        app:destination="@id/setAdminCypherFragment" />
 </navigation>

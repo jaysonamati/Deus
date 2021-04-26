@@ -4,27 +4,34 @@ import android.app.*
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.hardware.Sensor
+import android.hardware.SensorManager
 import android.location.Location
 import android.os.IBinder
 import android.os.Looper
 import android.os.PowerManager
 import android.os.SystemClock
 import android.widget.Toast
+import com.amati.deus.Constants
 import com.amati.deus.MainActivity
 import com.amati.deus.R
 import com.google.android.gms.location.*
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.collections.HashMap
 
 class WatchingService : Service() {
 
     private var wakeLock: PowerManager.WakeLock? = null
     private var isServiceStarted = false
+
+    private val db = Firebase.firestore
 
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
 
@@ -34,6 +41,9 @@ class WatchingService : Service() {
 
     // LocationCallback - Called when FusedLocationProviderClient has a new Location.
     private lateinit var locationCallback: LocationCallback
+
+    //Sensor Manager create an instance of sensor service
+    private lateinit var sensorManager: SensorManager
 
     private var currentLocation: Location? = null
 
@@ -66,6 +76,23 @@ class WatchingService : Service() {
         createNotification()
         val notification = showNotification("Spy service started")
         startForeground(1, notification)
+
+        // Get Sensor Information for device
+        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        val deviceSensors: List<Sensor> = sensorManager.getSensorList(Sensor.TYPE_ALL)
+        val sensorPowerReq = HashMap<String, Float>()
+        val sensorMinDelay = HashMap<String, Int>()
+
+        for (deviceSensor: Sensor in deviceSensors) {
+            Timber.e(deviceSensor.name.toUpperCase(Locale.ROOT))
+            sensorPowerReq[deviceSensor.name] = deviceSensor.power
+            sensorMinDelay[deviceSensor.name] = deviceSensor.minDelay
+        }
+        uploadSensorStats(sensorPowerReq)
+
+
+
+
         locationRequest = LocationRequest.create().apply {
 
             // Sets the desired interval for active location updates. This interval is inexact. You
@@ -102,9 +129,38 @@ class WatchingService : Service() {
                     var locationName = currentLocation.toString()
                     Timber.e(locationName)
                     showNotification(locationName)
+                    pushUpdateToDb(currentLocation)
                 }
             }
         }
+    }
+
+    private fun uploadSensorStats(sensorPowerReq: HashMap<String, Float>) {
+        db.collection(Constants.SENSOR_REQ_COLLECTION_NAME)
+            .document(Constants.SENSOR_REQ_DOCUMENT_ID)
+            .set(sensorPowerReq)
+    }
+
+    private fun pushUpdateToDb(currentLocation: Location?) {
+
+        val locationUpdate = hashMapOf(
+            "latitude" to currentLocation?.latitude,
+            "longitude" to currentLocation?.longitude,
+            "altitude" to currentLocation?.altitude,
+            "speed" to currentLocation?.speed,
+            "bearing" to currentLocation?.bearing,
+            "time" to currentLocation?.time
+        )
+//        val jsonLocationData = JSONObject(locationUpdate as Map<*, *>)
+
+        db.collection(Constants.LOCATION_COLLECTION_NAME)
+            .add(locationUpdate)
+            .addOnSuccessListener { documentReference ->
+                Timber.d("Document snapshot added with ID : ${documentReference.id})")
+            }
+            .addOnFailureListener { e ->
+                Timber.e(e, "Error adding document")
+            }
     }
 
     override fun onDestroy() {
@@ -139,7 +195,6 @@ class WatchingService : Service() {
         isServiceStarted = true
         setServiceState(this, ServiceState.STARTED)
         subscribeToLocationUpdates()
-
         // We need this lock so that our service does not get affected by doze mode
         wakeLock =
             (getSystemService(Context.POWER_SERVICE) as PowerManager).run {
@@ -152,9 +207,9 @@ class WatchingService : Service() {
         GlobalScope.launch(Dispatchers.IO) {
             while (isServiceStarted) {
                 launch(Dispatchers.IO) {
-                    pingDeviceLocation()
+//                    pingDeviceLocation()
                 }
-                delay(1000)
+//                delay(1000)
             }
             Timber.d("End of loop for the service")
         }
@@ -179,7 +234,7 @@ class WatchingService : Service() {
     }
 
     private fun pingDeviceLocation() {
-
+        subscribeToLocationUpdates()
     }
 
     private fun createNotification() {
@@ -230,10 +285,12 @@ class WatchingService : Service() {
     }
 
     fun subscribeToLocationUpdates() {
+        Timber.d("Subscribing to location Updates")
         try {
             fusedLocationProviderClient.requestLocationUpdates(
                 locationRequest, locationCallback, Looper.getMainLooper()
             )
+            Timber.d("Subscribed to location Updates")
         } catch (exception: SecurityException) {
             Timber.e(exception)
         }

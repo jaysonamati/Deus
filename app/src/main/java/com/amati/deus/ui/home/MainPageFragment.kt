@@ -13,7 +13,10 @@ import androidx.lifecycle.ViewModelProvider
 import com.amati.deus.MainActivity
 import com.amati.deus.R
 import com.amati.deus.databinding.FragmentMainPageBinding
-import com.amati.deus.services.*
+import com.amati.deus.services.ServiceActions
+import com.amati.deus.services.ServiceState
+import com.amati.deus.services.WatchingService
+import com.amati.deus.services.getServiceState
 import timber.log.Timber
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -68,7 +71,7 @@ class MainPageFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        mainViewModel.getElapsedTime().observe(viewLifecycleOwner, Observer {
+        mainViewModel.getElapsedTime().observe(viewLifecycleOwner, androidx.lifecycle.Observer {
 
             Timber.e((TimeUnit.MILLISECONDS.toMinutes(3660000) % 60).toString())
 
