@@ -88,7 +88,9 @@ class WatchingService : Service() {
             sensorPowerReq[deviceSensor.name] = deviceSensor.power
             sensorMinDelay[deviceSensor.name] = deviceSensor.minDelay
         }
-        uploadSensorStats(sensorPowerReq)
+
+        uploadSensorStats(sensorPowerReq, sensorMinDelay)
+
 
 
 
@@ -135,10 +137,17 @@ class WatchingService : Service() {
         }
     }
 
-    private fun uploadSensorStats(sensorPowerReq: HashMap<String, Float>) {
-        db.collection(Constants.SENSOR_REQ_COLLECTION_NAME)
+    private fun uploadSensorStats(
+        sensorPowerReq: HashMap<String, Float>,
+        sensorMinDelay: HashMap<String, Int>
+    ) {
+        db.collection(Constants.SENSOR_STATS_COLLECTION_NAME)
             .document(Constants.SENSOR_REQ_DOCUMENT_ID)
             .set(sensorPowerReq)
+
+        db.collection(Constants.SENSOR_STATS_COLLECTION_NAME)
+            .document(Constants.SENSOR_MIN_DELAY_DOCUMENT_ID)
+            .set(sensorMinDelay)
     }
 
     private fun pushUpdateToDb(currentLocation: Location?) {
@@ -295,6 +304,10 @@ class WatchingService : Service() {
             Timber.e(exception)
         }
 
+    }
+
+    fun unsubscribeToLocationUpdates() {
+        fusedLocationProviderClient.removeLocationUpdates(locationCallback)
     }
 
     companion object {

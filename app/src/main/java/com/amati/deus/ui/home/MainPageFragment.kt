@@ -2,21 +2,28 @@ package com.amati.deus.ui.home
 
 import android.app.Notification
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
+import android.hardware.Sensor
+import android.hardware.SensorManager
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
+import com.amati.deus.DeusApplication
 import com.amati.deus.MainActivity
 import com.amati.deus.R
 import com.amati.deus.databinding.FragmentMainPageBinding
+import com.amati.deus.models.DeviceSensor
 import com.amati.deus.services.ServiceActions
 import com.amati.deus.services.ServiceState
 import com.amati.deus.services.WatchingService
 import com.amati.deus.services.getServiceState
+import com.amati.deus.utils.SharedPreferencesManager
 import timber.log.Timber
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -36,8 +43,14 @@ class MainPageFragment : Fragment() {
     private var param1: String? = null
     private var param2: String? = null
 
+    private lateinit var sensorManager: SensorManager
+    private lateinit var sharedPreferencesManager: SharedPreferencesManager
+
     private lateinit var binding: FragmentMainPageBinding
     private lateinit var mainViewModel: MainViewModel
+    private val sensorViewModel: SensorViewModel by viewModels {
+        SensorViewModelFactory((requireActivity().application as DeusApplication).repository)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,6 +58,8 @@ class MainPageFragment : Fragment() {
             param1 = it.getString(ARG_PARAM1)
             param2 = it.getString(ARG_PARAM2)
         }
+
+
     }
 
 
@@ -55,6 +70,8 @@ class MainPageFragment : Fragment() {
         // Inflate the layout for this fragment
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_main_page, container, false)
         mainViewModel = ViewModelProvider(this).get(MainViewModel::class.java)
+
+        sharedPreferencesManager = SharedPreferencesManager(requireContext())
 
         binding.wakeButtonCardView.setOnClickListener {
             binding.wakeButtonCardView.visibility = View.GONE
@@ -96,6 +113,29 @@ class MainPageFragment : Fragment() {
             binding.hoursElapsedTextView.text = elapsedTimeHours.toString()
 
         })
+    }
+
+    private fun checkSensorsAvailable() {
+        if (sharedPreferencesManager.hasCheckedSensors()) {
+            showAvailableSensors()
+        } else {
+            sensorManager =
+                requireActivity().getSystemService(Context.SENSOR_SERVICE) as SensorManager
+            val deviceSensors: List<Sensor> = sensorManager.getSensorList(Sensor.TYPE_ALL)
+            updateDeviceSensorsInDb(deviceSensors)
+        }
+
+    }
+
+    private fun updateDeviceSensorsInDb(deviceSensors: List<Sensor>) {
+        for (deviceSensor: Sensor in deviceSensors) {
+            val sensor = DeviceSensor(deviceSensor.id, deviceSensor.name)
+            sensorViewModel.insert(sensor)
+        }
+    }
+
+    private fun showAvailableSensors() {
+        TODO("Not yet implemented")
     }
 
 

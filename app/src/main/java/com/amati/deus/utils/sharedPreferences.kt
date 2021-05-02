@@ -35,6 +35,19 @@ class SharedPreferencesManager(val context: Context) {
         }
     }
 
+    fun hasCheckedSensors(): Boolean {
+        val prefs: SharedPreferences = getEncryptedSharedPreferences()
+        return prefs.getBoolean(Constants.PREFERENCES_CHECK_SENSORS_KEY, false)
+    }
+
+    fun setHasCheckedSensors(value: Boolean) {
+        val prefs: SharedPreferences = getEncryptedSharedPreferences()
+        with(prefs.edit()) {
+            putBoolean(Constants.PREFERENCES_CHECK_SENSORS_KEY, value)
+            apply()
+        }
+    }
+
     fun isFirstTimeLaunch(): Boolean {
         val prefs: SharedPreferences =
             context.getSharedPreferences(Constants.PREFERENCES_FILE_NAME, Context.MODE_PRIVATE)
